@@ -10,7 +10,9 @@ It automates procurement, tracks shipping notifications, and manages warehouse s
 * **PO Processing:** Automate outbound EDI document generation (EDIFACT `ORDERS`).
 * **Inbound Message Parsing:** Handle `ORDRSP` (Order Response) and `DESADV` (Despatch Advice) messages.
 * **Warehouse Slot Management:** Integrate with WMS to coordinate truck arrival slots.
+* **Automated WMS Sync:** Background processing of slot rezerwations to external WMS systems.
 * **Proactive Alerting:** Flag missing responses, shipping delays, or quantity discrepancies.
+* **API Security:** Hardened endpoints using API Key authentication.
 
 ## 3. Technology Stack
 * **Framework:** .NET 8 (ASP.NET Core MVC)
@@ -19,31 +21,56 @@ It automates procurement, tracks shipping notifications, and manages warehouse s
 * **Architecture:** Clean Architecture (Core, Application, Infrastructure, Web layers)
 * **Logging:** Serilog with structured logging
 
-## 4. Getting Started
+## 4. Environment & Infrastructure Setup
+
+### 4.1 Database (Local PostgreSQL 18.4)
+The project is configured to use a local PostgreSQL 18.4 instance.
+* **Server:** `localhost:5432`
+* **Database:** `edigateway`
+* **Username:** `admin`
+* **Password:** `adminpassword`
+
+**Initialization:**
+1. Create the database and user:
+ ```sql
+ CREATE USER admin WITH PASSWORD 'adminpassword' SUPERUSER;
+ CREATE DATABASE edigateway OWNER admin;
+ ```
+2. Apply migrations (from the project root):
+ ```powershell
+ dotnet ef database update -project src\RetailEdiGateway.Infrastructure -startup-project src\RetailEdiGateway.Web
+ ```
+
+### 4.2 CI/CD (Jenkins & IIS)
+The project includes a `Jenkinsfile` for automated build, test, and deployment to IIS.
+* **Jenkins Pipeline:** Create a "Pipeline" project and link it to the Git repository.
+* **Credentials:** Add a secret text credential with ID `PROD_DB_CONNECTION_STRING` containing the connection string.
+* **IIS Deployment:** The pipeline automatically deploys to `C:\inetpub\wwwroot\RetailEdiGateway` using the `EdiGatewayPool` application pool.
+
+## 5. Getting Started
 
 ### Prerequisites
-* **.NET 8 SDK** (Required for building and running)
-* **PostgreSQL** (Database system)
+* **.NET 8 SDK**
+* **PostgreSQL 16+** (PostgreSQL 18.4 recommended)
+* **EF Core CLI Tools:** `dotnet tool install -global dotnet-ef`
 
-### Installation & Setup
-1. **Restore dependencies:**
+### Installation & Execution
+1. **Restore & Build:**
  ```powershell
- dotnet restore RetailEdiGateway.sln
+ dotnet restore
+ dotnet build
  ```
 
-2. **Build the solution:**
+2. **Run Locally:**
+ Set the environment to `Development` to use the local database settings:
  ```powershell
- dotnet build RetailEdiGateway.sln
+ $env:ASPNETCORE_ENVIRONMENT='Development'
+ dotnet run -project src\RetailEdiGateway.Web -urls "http://localhost:5000"
  ```
 
-3. **Run tests:**
+3. **Run Tests:**
  ```powershell
- dotnet test RetailEdiGateway.sln
- ```
-
-4. **Run the application:**
- ```powershell
- dotnet run -project src\RetailEdiGateway.Web
+ dotnet test
  ```
 
 ## 5. Project Structure
@@ -120,4 +147,58 @@ sequenceDiagram
  GW->>WMS: POST /api/v1/logistics/slots (Request Slot Booking)
  WMS->>GW: Booked Slot Confirmation (Bay & Arrival Time)
  GW->>GW: Associate booked slot with DESADV
+```
+
+### 6.3 Microservices Architecture & Request Flow
+The Gateway operates as a central hub within a distributed environment, coordinating with multiple external services while maintaining its own internal background processing and observability stack.
+
+```mermaid
+graph TB
+ subgraph ExternalServices ["External Systems"]
+ ERP[ERP / PIM System]
+ SUP[Supplier EDI Systems]
+ WMS_EXT[External WMS]
+ end
+
+ subgraph GatewayApp ["Retail EDI Gateway"]
+ direction TB
+ API[ASP.NET Core Web API]
+ DB[(PostgreSQL 18.4)]
+ 
+ subgraph BackgroundWorkers ["Background Services"]
+ Outbox[Outbox Processor]
+ Alerting[Alerting Service]
+ WMSSync[WMS Sync Processor]
+ end
+ end
+
+ subgraph Observability ["Observability Stack"]
+ OTel[OpenTelemetry SDK]
+ Prom[Prometheus]
+ Jaeger[Jaeger]
+ Grafana[Grafana Dashboard]
+ end
+
+ %% Request Flows
+ ERP - "1. Send PO" -> API
+ API - "2. Persist" -> DB
+ 
+ DB - "3. Fetch Pending" -> Outbox
+ Outbox - "4. Dispatch EDI" -> SUP
+ 
+ SUP - "5. Send ORDRSP/DESADV" -> API
+ API - "6. Update Status" -> DB
+ 
+ DB - "7. Monitor Deadlines" -> Alerting
+ Alerting - "8. Trigger Notifications" -> API
+ 
+ DB - "9. Fetch New Slots" -> WMSSync
+ WMSSync - "10. Sync Logistics" -> WMS_EXT
+
+ %% Telemetry Flows
+ GatewayApp - "Metrics/Traces" -> OTel
+ OTel -> Prom
+ OTel -> Jaeger
+ Prom -> Grafana
+ Jaeger -> Grafana
 ```
