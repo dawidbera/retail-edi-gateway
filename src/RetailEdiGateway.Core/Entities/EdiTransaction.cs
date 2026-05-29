@@ -23,14 +23,14 @@ namespace RetailEdiGateway.Core.Entities
  public PurchaseOrder? PurchaseOrder { get; set; }
 
  /// <summary>
- /// Type of message exchanged: "ORDERS", "ORDRSP", or "DESADV".
+ /// Type of message exchanged.
  /// </summary>
- public string MessageType { get; set; } = string.Empty;
+ public EdiMessageType MessageType { get; set; }
 
  /// <summary>
- /// Transaction direction: "INBOUND" or "OUTBOUND".
+ /// Transaction direction.
  /// </summary>
- public string Direction { get; set; } = string.Empty;
+ public EdiDirection Direction { get; set; }
 
  /// <summary>
  /// Raw message payload content (EDIFACT text or XML).
@@ -38,9 +38,9 @@ namespace RetailEdiGateway.Core.Entities
  public string Payload { get; set; } = string.Empty;
 
  /// <summary>
- /// Transaction processing status (e.g., "PENDING", "SUCCESS", "FAILED").
+ /// Transaction processing status.
  /// </summary>
- public string Status { get; set; } = "PENDING";
+ public EdiTransactionStatus Status { get; set; } = EdiTransactionStatus.Pending;
 
  /// <summary>
  /// Timestamp when the message was processed.
@@ -56,5 +56,68 @@ namespace RetailEdiGateway.Core.Entities
  /// Optional error message stored if processing or transmission failed.
  /// </summary>
  public string? ErrorMessage { get; set; }
+ }
+
+ /// <summary>
+ /// Represents the types of EDI messages supported by the gateway.
+ /// </summary>
+ public enum EdiMessageType
+ {
+ /// <summary>
+ /// Purchase Order message sent to a supplier.
+ /// </summary>
+ Orders,
+
+ /// <summary>
+ /// Order Response message received from a supplier.
+ /// </summary>
+ Ordrsp,
+
+ /// <summary>
+ /// Despatch Advice (Advanced Shipping Notice) received from a supplier.
+ /// </summary>
+ Desadv,
+
+ /// <summary>
+ /// Unknown or unsupported message type.
+ /// </summary>
+ Unknown
+ }
+
+ /// <summary>
+ /// Represents the flow direction of an EDI transaction.
+ /// </summary>
+ public enum EdiDirection
+ {
+ /// <summary>
+ /// Message received from an external partner.
+ /// </summary>
+ Inbound,
+
+ /// <summary>
+ /// Message sent to an external partner.
+ /// </summary>
+ Outbound
+ }
+
+ /// <summary>
+ /// Represents the processing status of an EDI transaction.
+ /// </summary>
+ public enum EdiTransactionStatus
+ {
+ /// <summary>
+ /// The transaction is pending processing or transmission.
+ /// </summary>
+ Pending,
+
+ /// <summary>
+ /// The transaction was processed or transmitted successfully.
+ /// </summary>
+ Success,
+
+ /// <summary>
+ /// The transaction processing or transmission failed.
+ /// </summary>
+ Failed
  }
 }

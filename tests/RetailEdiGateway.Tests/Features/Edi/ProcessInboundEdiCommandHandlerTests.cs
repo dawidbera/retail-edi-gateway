@@ -170,8 +170,8 @@ namespace RetailEdiGateway.Tests.Features.Edi
  // Verify transaction log
  var tx = await context.EdiTransactions.FindAsync(result.TransactionId);
  Assert.NotNull(tx);
- Assert.Equal("SUCCESS", tx.Status);
- Assert.Equal("ORDRSP", tx.MessageType);
+ Assert.Equal(EdiTransactionStatus.Success, tx.Status);
+ Assert.Equal(EdiMessageType.Ordrsp, tx.MessageType);
  }
  }
 

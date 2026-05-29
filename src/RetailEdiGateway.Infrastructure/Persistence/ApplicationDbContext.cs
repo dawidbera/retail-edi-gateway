@@ -100,9 +100,9 @@ namespace RetailEdiGateway.Infrastructure.Persistence
  {
  entity.ToTable("edi_transactions");
  entity.HasKey(e => e.Id);
- entity.Property(e => e.MessageType).IsRequired().HasMaxLength(50);
- entity.Property(e => e.Direction).IsRequired().HasMaxLength(50);
- entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+ entity.Property(e => e.MessageType).IsRequired().HasMaxLength(50).HasConversion<string>();
+ entity.Property(e => e.Direction).IsRequired().HasMaxLength(50).HasConversion<string>();
+ entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasConversion<string>();
  entity.Property(e => e.Payload).IsRequired();
  entity.Property(e => e.RetryCount).IsRequired().HasDefaultValue(0);
  entity.Property(e => e.ErrorMessage).HasMaxLength(1000);

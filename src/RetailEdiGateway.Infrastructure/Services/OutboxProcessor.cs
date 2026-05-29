@@ -63,7 +63,7 @@ namespace RetailEdiGateway.Infrastructure.Services
 
  // Retrieve pending outbound transactions
  var pendingTransactions = await context.EdiTransactions
- .Where(t => t.Direction == "OUTBOUND" && t.Status == "PENDING")
+ .Where(t => t.Direction == EdiDirection.Outbound && t.Status == EdiTransactionStatus.Pending)
  .OrderBy(t => t.ProcessedAt)
  .Take(20) // process in batches
  .ToListAsync(cancellationToken);
@@ -91,7 +91,7 @@ namespace RetailEdiGateway.Infrastructure.Services
  }
 
  // Successful transmission
- transaction.Status = "SUCCESS";
+ transaction.Status = EdiTransactionStatus.Success;
  transaction.ErrorMessage = null;
  transaction.ProcessedAt = DateTime.UtcNow;
  _logger.LogInformation("Outbound EDI transaction {Id} successfully transmitted.", transaction.Id);
@@ -103,7 +103,7 @@ namespace RetailEdiGateway.Infrastructure.Services
  
  if (transaction.RetryCount >= 3)
  {
- transaction.Status = "FAILED";
+ transaction.Status = EdiTransactionStatus.Failed;
  _logger.LogError("Transaction {Id} has failed after maximum attempts. Marked as FAILED.", transaction.Id);
  }
  }

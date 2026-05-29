@@ -91,11 +91,11 @@ namespace RetailEdiGateway.Web.Controllers.Api
  var ediTransaction = new EdiTransaction
  {
  PurchaseOrderId = order.Id,
- MessageType = "ORDERS",
- Direction = "OUTBOUND",
+ MessageType = EdiMessageType.Orders,
+ Direction = EdiDirection.Outbound,
  Payload = $"UNB+UNOA:2+RETAIL+{supplier.Code}+260524:1420+MSG01'\nBGM+220+{order.ErpOrderNumber}+9'\nNAD+SU+{supplier.Code}'" + 
  string.Join("", order.Lines.Select((l, idx) => $"\nLIN+{idx + 1}++{l.ProductCode}:EN'\nQTY+21:{l.OrderedQty}:PCE'\nDTM+2:{l.RequestedDate:yyyyMMdd}:102'")),
- Status = "PENDING",
+ Status = EdiTransactionStatus.Pending,
  ProcessedAt = DateTime.UtcNow
  };
 
