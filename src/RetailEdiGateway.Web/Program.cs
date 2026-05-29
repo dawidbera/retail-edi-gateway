@@ -50,6 +50,7 @@ builder.Services.AddSingleton<IAlertNotificationService, ConsoleAlertNotificatio
 // Register background workers
 builder.Services.AddHostedService<OutboxProcessor>();
 builder.Services.AddHostedService<AlertMonitoringService>();
+builder.Services.AddHostedService<WmsIntegrationProcessor>();
 
 // CQRS MediatR registration
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetCampaignDashboardQuery).Assembly));

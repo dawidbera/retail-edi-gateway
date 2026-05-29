@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RetailEdiGateway.Application.Common.Interfaces;
 using RetailEdiGateway.Core.Entities;
+using RetailEdiGateway.Web.Infrastructure.Security;
 using System;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ namespace RetailEdiGateway.Web.Controllers.Api
  /// <summary>
  /// API Controller for Logistics integration (WMS callback/status updates).
  /// </summary>
+ [ApiKey]
  [ApiController]
  [Route("api/v1/logistics")]
  public class LogisticsApiController : ControllerBase

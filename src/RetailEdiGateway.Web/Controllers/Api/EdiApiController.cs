@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RetailEdiGateway.Application.Features.Edi.Commands;
+using RetailEdiGateway.Web.Infrastructure.Security;
 using System.Threading.Tasks;
 
 namespace RetailEdiGateway.Web.Controllers.Api
@@ -8,6 +9,7 @@ namespace RetailEdiGateway.Web.Controllers.Api
  /// <summary>
  /// API Controller for receiving and processing EDIFACT payloads from integrated suppliers.
  /// </summary>
+ [ApiKey]
  [ApiController]
  [Route("api/v1/edi")]
  public class EdiApiController : ControllerBase

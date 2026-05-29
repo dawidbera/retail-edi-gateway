@@ -52,5 +52,10 @@ namespace RetailEdiGateway.Core.Entities
  /// Status of the booking slot.
  /// </summary>
  public WarehouseSlotStatus Status { get; set; } = WarehouseSlotStatus.Booked;
+
+ /// <summary>
+ /// Gets or sets a value indicating whether this slot has been successfully transmitted to the external WMS system.
+ /// </summary>
+ public bool IsSyncedToWms { get; set; }
  }
 }

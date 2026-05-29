@@ -1,16 +1,16 @@
-﻿# EDI & Supply Chain Gateway for 
+# EDI & Supply Chain Gateway
 
 ## 1. Overview
-The **EDI & Supply Chain Gateway** is an enterprise-grade integration middleware designed to orchestrate electronic data exchange (EDI) with suppliers, specifically for high-priority temporary in retail environments.
+The **EDI & Supply Chain Gateway** is an enterprise-grade integration middleware designed to orchestrate electronic data exchange (EDI) with suppliers, specifically for high-priority temporary campaigns in retail environments.
 
 It automates procurement, tracks shipping notifications, and manages warehouse slots to ensure on-time delivery for time-critical windows.
 
 ## 2. Key Features
 * **Campaign Tracking Dashboard:** Monitor fulfillment and delivery status of campaigns.
-* **PO Processing:** Automate outbound EDI document generation (EDIFACT `ORDERS`).
+* **PO Processing:** Simulated outbound EDI transaction queuing (EDIFACT `ORDERS` placeholder).
 * **Inbound Message Parsing:** Handle `ORDRSP` (Order Response) and `DESADV` (Despatch Advice) messages.
-* **Warehouse Slot Management:** Integrate with WMS to coordinate truck arrival slots.
-* **Automated WMS Sync:** Background processing of slot rezerwations to external WMS systems.
+* **Warehouse Slot Management:** Coordinate truck arrival slots via internal reservation system.
+* **WMS Sync Simulation:** Background processing of slot reservations with simulated external integration.
 * **Proactive Alerting:** Flag missing responses, shipping delays, or quantity discrepancies.
 * **API Security:** Hardened endpoints using API Key authentication.
 
@@ -128,7 +128,7 @@ sequenceDiagram
  participant WMS as WMS System
 
  Note over ERP, SUP: 1. Purchase Order Dispatch
- ERP->>GW: POST /api/v1/orders ( PO)
+ ERP->>GW: POST /api/v1/orders (PO)
  GW->>GW: Persist PO & Queue Outbox Message
  GW->>SUP: Dispatch EDIFACT ORDERS (Purchase Order)
 
@@ -201,4 +201,6 @@ graph TB
  OTel -> Jaeger
  Prom -> Grafana
  Jaeger -> Grafana
+```
+
 ```

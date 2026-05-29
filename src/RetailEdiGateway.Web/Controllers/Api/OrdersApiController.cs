@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RetailEdiGateway.Application.Common.Interfaces;
 using RetailEdiGateway.Core.Entities;
+using RetailEdiGateway.Web.Infrastructure.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace RetailEdiGateway.Web.Controllers.Api
  /// <summary>
  /// API Controller for receiving Purchase Orders pushed from the ERP system.
  /// </summary>
+ [ApiKey]
  [ApiController]
  [Route("api/v1/orders")]
  public class OrdersApiController : ControllerBase
