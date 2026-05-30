@@ -110,10 +110,10 @@ graph TD
  end
 
  %% Dependency Directions (Inner layers do not depend on outer layers)
- Web -> App
- Web -> Infra
+ Web --> App
+ Web --> Infra
  Infra -.-> Interfaces
- App -> Core
+ App --> Core
 ```
 
 ### 6.2 End-to-End EDI and Supply Chain Flow
@@ -180,27 +180,27 @@ graph TB
  end
 
  %% Request Flows
- ERP - "1. Send PO" -> API
- API - "2. Persist" -> DB
+ ERP -- "1. Send PO" --> API
+ API -- "2. Persist" --> DB
  
- DB - "3. Fetch Pending" -> Outbox
- Outbox - "4. Dispatch EDI" -> SUP
+ DB -- "3. Fetch Pending" --> Outbox
+ Outbox -- "4. Dispatch EDI" --> SUP
  
- SUP - "5. Send ORDRSP/DESADV" -> API
- API - "6. Update Status" -> DB
+ SUP -- "5. Send ORDRSP/DESADV" --> API
+ API -- "6. Update Status" --> DB
  
- DB - "7. Monitor Deadlines" -> Alerting
- Alerting - "8. Trigger Notifications" -> API
+ DB -- "7. Monitor Deadlines" --> Alerting
+ Alerting -- "8. Trigger Notifications" --> API
  
- DB - "9. Fetch New Slots" -> WMSSync
- WMSSync - "10. Sync Logistics" -> WMS_EXT
+ DB -- "9. Fetch New Slots" --> WMSSync
+ WMSSync -- "10. Sync Logistics" --> WMS_EXT
 
  %% Telemetry Flows
- GatewayApp - "Metrics/Traces" -> OTel
- OTel -> Prom
- OTel -> Jaeger
- Prom -> Grafana
- Jaeger -> Grafana
+ GatewayApp -- "Metrics/Traces" --> OTel
+ OTel --> Prom
+ OTel --> Jaeger
+ Prom --> Grafana
+ Jaeger --> Grafana
 ```
 
 ```
