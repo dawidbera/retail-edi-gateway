@@ -69,9 +69,17 @@ For high-traffic production environments, the following IIS settings are recomme
 * **.NET 8 SDK**
 * **PostgreSQL 16+** (PostgreSQL 18.4 recommended)
 * **EF Core CLI Tools:** `dotnet tool install -global dotnet-ef`
+* **Docker & Docker Compose:** Required for running the Observability Stack.
 
 ### Installation & Execution
-1. **Restore & Build:**
+1. **Observability Stack (Optional but Recommended):**
+ Start the monitoring infrastructure (Prometheus, Jaeger, Loki, Grafana):
+ ```powershell
+ docker-compose up -d
+ ```
+ Access the dashboards at `http://localhost:3000` (Grafana).
+
+2. **Restore & Build:**
  ```powershell
  dotnet restore
  dotnet build

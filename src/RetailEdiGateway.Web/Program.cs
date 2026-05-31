@@ -25,9 +25,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog structured logging
 Log.Logger = new LoggerConfiguration()
- .WriteTo.Console()
- .WriteTo.File("C:\\Logs\\EDIGateway\\log-.txt", rollingInterval: RollingInterval.Day)
- .CreateLogger();
+    .WriteTo.Console()
+    .WriteTo.File("C:\\Logs\\EDIGateway\\log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.OpenTelemetry(options =>
+    {
+        options.Endpoint = "http://localhost:4317";
+        options.Protocol = Serilog.Sinks.OpenTelemetry.OtlpProtocol.Grpc;
+        options.ResourceAttributes = new Dictionary<string, object>
+        {
+            ["service.name"] = "RetailEdiGateway.Web"
+        };
+    })
+    .CreateLogger();
 
 builder.Host.UseSerilog();
 

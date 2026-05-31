@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+      - "8889:8889" # Prometheus exporter metrics
+    networks:
+      - edi-network
+
+  # Prometheus (Metrics)
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - edi-network
+
+  # Jaeger (Traces)
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: jaeger
+    ports:
+      - "16686:16686" # UI
+      - "4317"       # OTLP gRPC (internal)
+    networks:
+      - edi-network
+
+  # Loki (Logs)
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - edi-network
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    networks:
+      - edi-network
+
+networks:
+  edi-network:
+    driver: bridge
