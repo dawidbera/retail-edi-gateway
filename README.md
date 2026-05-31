@@ -5,6 +5,11 @@ The **EDI & Supply Chain Gateway** is an enterprise-grade integration middleware
 
 It automates procurement, tracks shipping notifications, and manages warehouse slots to ensure on-time delivery for time-critical windows.
 
+### Screenshots
+| Campaign Monitor | WMS Unloading Schedule |
+| :--- | :--- |
+| ![Campaigns Dashboard](images/Campaigns.jpg) | ![WMS Schedule](images/WMSUnloadingSchedule.jpg) |
+
 ## 2. Key Features
 * **Campaign Tracking Dashboard:** Monitor fulfillment and delivery status of campaigns.
 * **PO Processing:** Simulated outbound EDI transaction queuing (EDIFACT `ORDERS` placeholder).
@@ -17,9 +22,10 @@ It automates procurement, tracks shipping notifications, and manages warehouse s
 ## 3. Technology Stack
 * **Framework:** .NET 8 (ASP.NET Core MVC)
 * **Database:** PostgreSQL with Entity Framework Core (EF Core)
-* **Observability:** OpenTelemetry (Prometheus metrics, Grafana logs/traces)
+* **Observability:** OpenTelemetry (Prometheus metrics, Jaeger traces, Grafana logs/traces)
 * **Architecture:** Clean Architecture (Core, Application, Infrastructure, Web layers)
 * **Logging:** Serilog with structured logging
+* **Testing:** xUnit, Moq, FluentAssertions (Mocking and Unit/Integration testing)
 
 ## 4. Environment & Infrastructure Setup
 
@@ -47,6 +53,16 @@ The project includes a `Jenkinsfile` for automated build, test, and deployment t
 * **Credentials:** Add a secret text credential with ID `PROD_DB_CONNECTION_STRING` containing the connection string.
 * **IIS Deployment:** The pipeline automatically deploys to `C:\inetpub\wwwroot\RetailEdiGateway` using the `EdiGatewayPool` application pool.
 
+### 4.3 IIS Production Configuration (Windows Server 2022)
+For high-traffic production environments, the following IIS settings are recommended:
+* **Application Pool:**
+  * **Start Mode:** `AlwaysRunning`
+  * **Idle Time-out (minutes):** `0` (Prevents the app from spinning down)
+  * **Recycling:** Disable fixed intervals; use specific off-peak times (e.g., 03:00 AM).
+* **Advanced Settings:**
+  * **Preload Enabled:** `True` on the Site and Application level.
+  * **Application Initialization:** Ensure the IIS module is installed to handle warm-up requests.
+
 ## 5. Getting Started
 
 ### Prerequisites
@@ -73,16 +89,16 @@ The project includes a `Jenkinsfile` for automated build, test, and deployment t
  dotnet test
  ```
 
-## 5. Project Structure
+## 6. Project Structure
 * `src/RetailEdiGateway.Core`: Domain entities, enums, and core business rules.
 * `src/RetailEdiGateway.Application`: Use cases (MediatR), interfaces, and application logic.
 * `src/RetailEdiGateway.Infrastructure`: Database implementation (EF Core), external services, and background processors.
 * `src/RetailEdiGateway.Web`: MVC/API Controllers, Views, and application configuration.
 * `tests/`: Unit and integration tests.
 
-## 6. Architecture & Data Flow
+## 7. Architecture & Data Flow
 
-### 6.1 Clean Architecture Dependency Flow
+### 7.1 Clean Architecture Dependency Flow
 The project is built following Clean Architecture principles, ensuring separation of concerns, testability, and independence from external frameworks:
 
 ```mermaid
@@ -116,7 +132,7 @@ graph TD
  App --> Core
 ```
 
-### 6.2 End-to-End EDI and Supply Chain Flow
+### 7.2 End-to-End EDI and Supply Chain Flow
 The gateway orchestrates communication between the internal ERP system, external suppliers, and the Warehouse Management System (WMS):
 
 ```mermaid
@@ -149,58 +165,84 @@ sequenceDiagram
  GW->>GW: Associate booked slot with DESADV
 ```
 
-### 6.3 Microservices Architecture & Request Flow
-The Gateway operates as a central hub within a distributed environment, coordinating with multiple external services while maintaining its own internal background processing and observability stack.
+### 7.3 Microservices Architecture & Request Flow
+The Gateway operates as a central hub within a distributed environment, coordinating with multiple external services while maintaining its own internal background processing, automated quality assurance, and observability stack.
 
 ```mermaid
 graph TB
- subgraph ExternalServices ["External Systems"]
- ERP[ERP / PIM System]
- SUP[Supplier EDI Systems]
- WMS_EXT[External WMS]
- end
+    subgraph CI_CD ["CI/CD Pipeline"]
+        Jenkins[Jenkins Server]
+        Tests[xUnit Test Suite]
+    end
 
- subgraph GatewayApp ["Retail EDI Gateway"]
- direction TB
- API[ASP.NET Core Web API]
- DB[(PostgreSQL 18.4)]
- 
- subgraph BackgroundWorkers ["Background Services"]
- Outbox[Outbox Processor]
- Alerting[Alerting Service]
- WMSSync[WMS Sync Processor]
- end
- end
+    subgraph ExternalServices ["External Systems"]
+        ERP[ERP / PIM System]
+        SUP[Supplier EDI Systems]
+        WMS_EXT[External WMS]
+    end
 
- subgraph Observability ["Observability Stack"]
- OTel[OpenTelemetry SDK]
- Prom[Prometheus]
- Jaeger[Jaeger]
- Grafana[Grafana Dashboard]
- end
+    subgraph GatewayApp ["Retail EDI Gateway (.NET 8)"]
+        direction TB
+        API[ASP.NET Core Web API / MVC]
+        DB[(PostgreSQL 18.4)]
+        
+        subgraph BackgroundWorkers ["Background Services"]
+            Outbox[Outbox Processor]
+            Alerting[Alerting Service]
+            WMSSync[WMS Sync Processor]
+        end
+    end
 
- %% Request Flows
- ERP -- "1. Send PO" --> API
- API -- "2. Persist" --> DB
- 
- DB -- "3. Fetch Pending" --> Outbox
- Outbox -- "4. Dispatch EDI" --> SUP
- 
- SUP -- "5. Send ORDRSP/DESADV" --> API
- API -- "6. Update Status" --> DB
- 
- DB -- "7. Monitor Deadlines" --> Alerting
- Alerting -- "8. Trigger Notifications" --> API
- 
- DB -- "9. Fetch New Slots" --> WMSSync
- WMSSync -- "10. Sync Logistics" --> WMS_EXT
+    subgraph Observability ["Observability Stack"]
+        OTel[OpenTelemetry SDK]
+        Prom[Prometheus]
+        Jaeger[Jaeger]
+        Grafana[Grafana / Loki / Tempo]
+    end
 
- %% Telemetry Flows
- GatewayApp -- "Metrics/Traces" --> OTel
- OTel --> Prom
- OTel --> Jaeger
- Prom --> Grafana
- Jaeger --> Grafana
+    %% CI/CD Flow
+    Jenkins -- "1. Trigger Build/Test" --> Tests
+    Tests -- "2. Validate" --> GatewayApp
+    Jenkins -- "3. Deploy to IIS" --> GatewayApp
+
+    %% Request Flows
+    ERP -- "Send PO" --> API
+    API -- "Persist" --> DB
+    
+    DB -- "Fetch Pending" --> Outbox
+    Outbox -- "Dispatch EDI" --> SUP
+    
+    SUP -- "Send ORDRSP/DESADV" --> API
+    API -- "Update Status" --> DB
+    
+    DB -- "Monitor Deadlines" --> Alerting
+    Alerting -- "Trigger Notifications" --> API
+    
+    DB -- "Fetch New Slots" --> WMSSync
+    WMSSync -- "Sync Logistics" --> WMS_EXT
+
+    %% Telemetry Flows
+    GatewayApp -- "Metrics/Traces/Logs" --> OTel
+    OTel -- "Scrape" --> Prom
+    OTel -- "Export" --> Jaeger
+    Prom --> Grafana
+    Jaeger --> Grafana
 ```
 
-```
+## 8. Monitoring & Maintenance
+
+### 8.1 Health Checks
+The application exposes a health check endpoint at `/health`. It monitors:
+* PostgreSQL connectivity.
+* Background service status.
+* Disk space on Windows Server.
+
+### 8.2 Log Management
+* **Location:** Logs are stored at `C:\Logs\EDIGateway\` on the Windows Server.
+* **Rotation:** Managed by Serilog (`rollingInterval: RollingInterval.Day`).
+* **Aggregation:** Shipped to Grafana Loki via OpenTelemetry.
+
+### 8.3 Troubleshooting Common IIS Issues
+* **503 Service Unavailable:** Check if the `EdiGatewayPool` AppPool has crashed (likely due to invalid DB credentials).
+* **500.19 Internal Server Error:** Verify that the `web.config` is correct and the IIS URL Rewrite module is installed.
+* **Performance Degradation:** Monitor the "Background workers" lag in Prometheus metrics; check for high DB connection pool usage.
