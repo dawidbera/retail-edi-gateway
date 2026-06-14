@@ -168,7 +168,7 @@ namespace RetailEdiGateway.Application.Features.Edi.Commands
                     return new EdiProcessResponseDto
                     {
                         Success = true,
-                        Message = hasMismatch 
+                        Message = hasMismatch
                             ? "EDI parsed successfully. Discrepancies detected and flagged as mismatched."
                             : "EDI parsed successfully. Supplier confirmation matches ordered quantities.",
                         TransactionId = transaction.Id,

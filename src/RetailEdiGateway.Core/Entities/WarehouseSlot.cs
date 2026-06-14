@@ -2,9 +2,9 @@
 
 namespace RetailEdiGateway.Core.Entities
 {
- /// <summary>
- /// Represents the status of a reserved delivery time slot.
- /// </summary>
+    /// <summary>
+    /// Represents the status of a reserved delivery time slot.
+    /// </summary>
     public enum WarehouseSlotStatus
     {
         /// <summary>

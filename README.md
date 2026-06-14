@@ -87,17 +87,9 @@ For high-traffic production environments, the following IIS settings are recomme
 * **.NET 8 SDK**
 * **PostgreSQL 16+** (PostgreSQL 18.4 recommended)
 * **EF Core CLI Tools:** `dotnet tool install -global dotnet-ef`
-* **Docker & Docker Compose:** Required for running the Observability Stack.
 
 ### Installation & Execution
-1. **Observability Stack (Optional but Recommended):**
- Start the monitoring infrastructure (Prometheus, Jaeger, Loki, Grafana):
- ```powershell
- docker-compose up -d
- ```
- Access the dashboards at `http://localhost:3000` (Grafana).
-
-2. **Restore & Build:**
+1. **Restore & Build:**
  ```powershell
  dotnet restore
  dotnet build
@@ -263,15 +255,13 @@ graph TB
 ### 8.1 Health Checks
 The application exposes a health check endpoint at `/health`. It monitors:
 * PostgreSQL connectivity.
-* Background service status.
-* Disk space on Windows Server.
 
 ### 8.2 Log Management
 * **Location:** Logs are stored at `C:\Logs\EDIGateway\` on the Windows Server.
 * **Rotation:** Managed by Serilog (`rollingInterval: RollingInterval.Day`).
-* **Aggregation:** Shipped to Grafana Loki via OpenTelemetry.
+* **Aggregation:** Configured to ship to Grafana Loki via OpenTelemetry (requires external OTel collector).
 
 ### 8.3 Troubleshooting Common IIS Issues
 * **503 Service Unavailable:** Check if the `EdiGatewayPool` AppPool has crashed (likely due to invalid DB credentials).
 * **500.19 Internal Server Error:** Verify that the `web.config` is correct and the IIS URL Rewrite module is installed.
-* **Performance Degradation:** Monitor the "Background workers" lag in Prometheus metrics; check for high DB connection pool usage.
+* **Performance Degradation:** Monitor the "Background workers" lag; check for high DB connection pool usage.
